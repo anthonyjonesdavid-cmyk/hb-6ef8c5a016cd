@@ -1,0 +1,51 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="robots" content="noindex"><meta name="theme-color" content="#000">
+<title>Setup</title><style>
+:root{--bar:#121214;--row:#1c1c1e;--line:#2c2c2e;--sub:#8e8e93;--acc:#0a84ff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#000;color:#fff;font:16px -apple-system,system-ui,sans-serif}
+.sb{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bar);z-index:3}
+header{position:fixed;top:env(safe-area-inset-top);left:0;right:0;height:48px;background:var(--bar);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 8px;z-index:2}
+header a{color:var(--acc);text-decoration:none;min-width:64px;height:44px;display:flex;align-items:center;padding:0 8px}
+header h1{flex:1;text-align:center;font-size:17px;margin:0 64px 0 0}
+main{padding:calc(env(safe-area-inset-top) + 56px) 16px calc(env(safe-area-inset-bottom) + 24px);max-width:760px;margin:0 auto;line-height:1.5}
+h2{font-size:13px;color:var(--sub);text-transform:uppercase;margin:24px 0 6px}
+ol{padding-left:20px;margin:6px 0}li{margin:4px 0}
+code{background:#2c2c2e;padding:1px 5px;border-radius:4px;font-size:13px;word-break:break-all}
+pre{background:#111;border:1px solid var(--line);padding:10px;border-radius:8px;font:12px ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow:auto}
+button{font:inherit;border:0;background:var(--acc);color:#fff;height:44px;padding:0 16px;border-radius:10px;cursor:pointer;margin:4px 0}
+button:active{background:var(--acc)}
+.r{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.c{background:var(--row);color:var(--acc);height:40px;font-size:14px}
+</style></head><body><div class="sb"></div>
+<header><a href="./">‹ Back</a><h1>Setup</h1></header>
+<main>
+<h2>1 · Widget (Scriptable)</h2>
+<ol><li>Install <b>Scriptable</b> from the App Store.</li>
+<li>Tap <b>Copy widget script</b> below. Your key is already filled in.</li>
+<li>In Scriptable tap <b>+</b>, paste, name it <b>Habits</b>, tap Done.</li>
+<li>Long-press the Home Screen › <b>+</b> › Scriptable › pick Medium or Large (6×2 grid) or Small (4 rings) › Add Widget.</li>
+<li>Long-press the widget › <b>Edit Widget</b> › Script: <b>Habits</b>. When Interacting: <b>Run Script</b> isn't needed — each ring opens its own link.</li>
+<li>Optional Parameter: <code>water,run,stretch</code> to choose habits, or <code>style=bold;bg=#1c1c1e</code>.</li></ol>
+<div class="r"><button id="cw">Copy widget script</button><a href="habits-widget.js" style="color:var(--acc)">View script</a></div>
+<pre id="pv">Loading…</pre>
+<h2>2 · One-tap Shortcuts</h2>
+<ol><li>Open <b>Shortcuts</b> › <b>+</b> › Add Action › <b>Get Contents of URL</b>.</li>
+<li>URL: tap Copy URL and paste.</li>
+<li>Tap the arrow › Method <b>POST</b>. Headers: add <code>apikey</code> = (Copy apikey) and <code>Content-Type</code> = <code>application/json</code>.</li>
+<li>Request Body: <b>JSON</b>. Add Text fields <code>k</code> = (Copy key), <code>h</code> = habit id (e.g. <code>water</code>), <code>src</code> = <code>shortcut</code>.</li>
+<li>Optional: add <b>Show Notification</b> “Logged”. Name it <b>Log Water</b>.</li>
+<li>Share › <b>Add to Home Screen</b>, pick an icon/color. Clear the name for an icon-only look.</li>
+<li>Duplicate the shortcut for each habit and change <code>h</code>.</li></ol>
+<div class="r"><button class="c" data-cp="url">Copy URL</button><button class="c" data-cp="anon">Copy apikey</button><button class="c" data-cp="key">Copy key</button></div>
+<p style="color:var(--sub);font-size:14px">Habit ids: <span id="ids"></span>. Add <code>action</code> = <code>undo</code> to remove the last log. Tapping a ring in the widget opens <code>?log=&lt;id&gt;</code> instead.</p>
+</main>
+<script>
+const SUPA='https://hlsvzfdvvstojztmworm.supabase.co',ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhsc3Z6ZmR2dnN0b2p6dG13b3JtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4MDE3MDQsImV4cCI6MjA5OTM3NzcwNH0.VAJwjJlpCS0-bzP6NCPj4E1rc8yg9PFy3b51n6uvkIY',KEY=localStorage.getItem('hb_key')||'';
+const vals={url:SUPA+'/rest/v1/rpc/hb_log',anon:ANON,key:KEY};let script='';
+async function copy(t,b){try{await navigator.clipboard.writeText(t);}catch(e){const a=document.createElement('textarea');a.value=t;document.body.append(a);a.select();document.execCommand('copy');a.remove();}const o=b.textContent;b.textContent='Copied ✓';setTimeout(()=>b.textContent=o,1300);}
+document.querySelectorAll('[data-cp]').forEach(b=>b.onclick=()=>copy(vals[b.dataset.cp],b));
+fetch('habits-widget.js',{cache:'no-store'}).then(r=>r.text()).then(t=>{script=KEY?t.replace('PASTE_YOUR_HABIT_KEY',KEY):t;document.getElementById('pv').textContent=script.slice(0,1400)+'\n…';});
+document.getElementById('cw').onclick=e=>copy(script,e.target);
+try{const S=JSON.parse(localStorage.getItem('hb_state'));document.getElementById('ids').innerHTML=S.habits.map(h=>'<code>'+h.id+'</code>').join(' ');}catch(e){}
+</script></body></html>
