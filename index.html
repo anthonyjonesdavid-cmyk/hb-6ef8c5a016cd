@@ -116,7 +116,7 @@ function hasHistory(h,days){const first=S.entries.find(e=>e.h===h.id);if(!first)
 function rate(h,C,n,skipToday){let d=0;const t=today();for(let i=skipToday;i<n+skipToday;i++){if(dayCount(C,h,addDays(t,-i))>=h.target)d++;}return d/n;}
 function rateW(h,C,n){let d=0;const w=wkey(today());for(let i=1;i<=n;i++)if(periodCount(C,h,addDays(w,-7*i))>=h.target)d++;return d/n;}
 function icon(h){if(SYM[h.icon])return SYM[h.icon];if(h.icon&&h.icon.length<=3)return esc(h.icon);return esc((h.name||'?').slice(0,2).toUpperCase());}
-function ringSvg(p,col,sz=84,w=9){const r=(sz-w)/2,c=2*Math.PI*r;return `<svg viewBox="0 0 ${sz} ${sz}"><circle cx="${sz/2}" cy="${sz/2}" r="${r}" fill="${p>=1?col:'none'}" fill-opacity="${p>=1?.28:0}" stroke="${col}" stroke-opacity=".25" stroke-width="${w}"/><circle cx="${sz/2}" cy="${sz/2}" r="${r}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${c*Math.min(p,1)} ${c}"/></svg>`;}
+function ringSvg(p,col,sz=84,w=9){const r=(sz-w)/2,c=2*Math.PI*r;return `<svg viewBox="0 0 ${sz} ${sz}"><circle cx="${sz/2}" cy="${sz/2}" r="${r}" fill="${p>=1?col:'none'}" fill-opacity="${p>=1?.28:0}" stroke="${col}" stroke-opacity=".25" stroke-width="${w}"/>${p>0?`<circle cx="${sz/2}" cy="${sz/2}" r="${r}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${c*Math.min(p,1)} ${c}"/>`:''}</svg>`;}
 function setHeader(t,l,r){$('#ht').textContent=t;const L=$('#hl'),R=$('#hr');L.innerHTML=l?l[0]:'';L.onclick=l?l[1]:null;R.innerHTML=r?r[0]:'';R.onclick=r?r[1]:null;}
 function render(){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===view));
  if(!KEY()&&view!=='settings')return renderKey();
