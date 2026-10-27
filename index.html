@@ -92,9 +92,7 @@ const COLORS=['#ff453a','#ff9f0a','#ffd60a','#30d158','#34c759','#64d2ff','#0a84
 const $=s=>document.querySelector(s), esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let S=JSON.parse(localStorage.getItem('hb_state')||'{"habits":[],"entries":[]}'), view='today', range=30, sub=null;
 const qs=new URLSearchParams(location.search);
-if(qs.get('key')){localStorage.setItem('hb_key',qs.get('key'));}
-const KEY=()=>localStorage.getItem('hb_key');
-async function rpc(fn,body){const r=await fetch(SUPA+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+ANON,'Content-Type':'application/json'},body:JSON.stringify({k:KEY(),...body})});
+async function rpc(fn,body){const r=await fetch(SUPA+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+ANON,'Content-Type':'application/json'},body:JSON.stringify(body||{})});
  const t=await r.text(); if(!r.ok) throw new Error((JSON.parse(t||'{}').message)||r.status); return t?JSON.parse(t):null;}
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),1600);}
 // dates in Chicago
@@ -119,11 +117,8 @@ function icon(h){if(SYM[h.icon])return SYM[h.icon];if(h.icon&&h.icon.length<=3)r
 function ringSvg(p,col,sz=84,w=9){const r=(sz-w)/2,c=2*Math.PI*r;return `<svg viewBox="0 0 ${sz} ${sz}"><circle cx="${sz/2}" cy="${sz/2}" r="${r}" fill="${p>=1?col:'none'}" fill-opacity="${p>=1?.28:0}" stroke="${col}" stroke-opacity=".25" stroke-width="${w}"/>${p>0?`<circle cx="${sz/2}" cy="${sz/2}" r="${r}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${c*Math.min(p,1)} ${c}"/>`:''}</svg>`;}
 function setHeader(t,l,r){$('#ht').textContent=t;const L=$('#hl'),R=$('#hr');L.innerHTML=l?l[0]:'';L.onclick=l?l[1]:null;R.innerHTML=r?r[0]:'';R.onclick=r?r[1]:null;}
 function render(){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===view));
- if(!KEY()&&view!=='settings')return renderKey();
  if(sub)return sub();
  ({today:renderToday,trends:renderTrends,settings:renderSettings})[view]();}
-function renderKey(){setHeader('Habits');$('#m').innerHTML=`<div class="empty">Enter your habit key to connect. It's in the setup message, or open the app once from your personal link.</div><div class="list"><div class="fld"><label>Key</label><input id="k" autocapitalize="off" autocomplete="off" placeholder="Paste key"></div></div><button class="btn pri" id="ks">Connect</button>`;
- $('#ks').onclick=()=>{localStorage.setItem('hb_key',$('#k').value.trim());sync().then(render);};}
 function renderToday(){setHeader('Today');const C=counts(),t=today();
  if(!S.habits.length){$('#m').innerHTML='<div class="empty">No habits yet. Add them in Settings.</div>';return;}
  $('#m').innerHTML='<div class="grid">'+S.habits.map(h=>{const n=periodCount(C,h,t),st=stats(h,C);
@@ -166,12 +161,12 @@ function renderDetail(h){setHeader(h.name,['‹ Back',()=>{sub=null;render();}])
  ${h.period!=='week'?`<div class="sec">By weekday</div><div class="list">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((n,i)=>`<div class="fld"><label>${n}</label><div style="flex:1;height:8px;background:#2c2c2e;border-radius:4px"><div style="width:${wn[i]?wd[i]/wn[i]*100:0}%;height:8px;background:${h.color};border-radius:4px"></div></div></div>`).join('')}</div>`:''}`;}
 function renderSettings(){if(sub)return sub();setHeader('Settings',null,['Add',()=>{sub=()=>renderEdit(null);render();}]);
  $('#m').innerHTML=`<div class="sec">Habits</div><div class="list" id="hl2">${S.habits.map((h,i)=>`<div class="row" data-h="${esc(h.id)}"><div class="em" style="background:${h.color}33;color:${h.color}">${icon(h)}</div><button class="tx" style="text-align:left;min-height:40px" data-e="${esc(h.id)}"><div class="t1">${esc(h.name)}</div><div class="t2">${h.target}× per ${h.period} · ?log=${esc(h.id)}</div></button><button class="drag" data-u="${i}" aria-label="Move up">↑</button><button class="drag" data-d="${i}" aria-label="Move down">↓</button></div>`).join('')}</div>
- <div class="list"><button class="row" id="setup"><div class="tx">Widget & Shortcuts setup</div><span class="chev">›</span></button><button class="row" id="rk"><div class="tx">Habit key</div><div class="t2">${KEY()?'Connected':'Not set'}</div></button></div>`;
+ <div class="list"><button class="row" id="setup"><div class="tx">Widget & Shortcuts setup</div><span class="chev">›</span></button></div>`;
  document.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{const h=S.habits.find(x=>x.id===b.dataset.e);sub=()=>renderEdit(h);render();});
  const mv=async(i,d)=>{const a=S.habits.slice();const j=i+d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];S.habits=a;render();try{await rpc('hb_reorder',{ids:a.map(h=>h.id)});await sync();}catch(e){toast(e.message)}};
  document.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>mv(+b.dataset.u,-1));document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>mv(+b.dataset.d,1));
  $('#setup').onclick=()=>location.href='setup.html';
- $('#rk').onclick=()=>{const k=prompt('Habit key',KEY()||'');if(k!==null){localStorage.setItem('hb_key',k.trim());sync().then(render).catch(e=>toast(e.message));}};}
+}
 function renderEdit(h){const isNew=!h;h=h?{...h}:{id:'',name:'',icon:'',color:COLORS[6],target:1,period:'day'};let col=h.color;
  setHeader(isNew?'New Habit':'Edit',['Cancel',()=>{sub=null;render();}],['Save',save]);
  $('#m').innerHTML=`<div class="list"><div class="fld"><label>Name</label><input id="fn" value="${esc(h.name)}" placeholder="Drink water"></div>
@@ -187,13 +182,12 @@ function renderEdit(h){const isNew=!h;h=h?{...h}:{id:'',name:'',icon:'',color:CO
  if(!isNew)$('#del').onclick=async()=>{if(!confirm(`Delete ${h.name} and all its history?`))return;try{await rpc('hb_delete_habit',{h:h.id});sub=null;await sync();render();toast('Deleted');}catch(e){toast(e.message)}};
  async function save(){const id=$('#fid').value.trim().toLowerCase().replace(/[^a-z0-9_-]/g,''),name=$('#fn').value.trim();if(!id||!name)return toast('Name and link id needed');
   try{await rpc('hb_save_habit',{habit:{old_id:isNew?null:h.id,id,name,icon:$('#fi').value.trim(),color:col,target:Math.max(1,+$('#ft').value||1),period:$('#fp').value}});sub=null;await sync();render();toast('Saved');}catch(e){toast(e.message)}}}
-async function sync(){if(!KEY())return;const r=await rpc('hb_state',{days:120});S={habits:r.habits,entries:r.entries};localStorage.setItem('hb_state',JSON.stringify(S));}
+async function sync(){const r=await rpc('hb_state',{days:120});S={habits:r.habits,entries:r.entries};localStorage.setItem('hb_state',JSON.stringify(S));}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{view=b.dataset.v;sub=null;render();scrollTo(0,0);});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync().then(render).catch(()=>{});});
 (async()=>{render();try{await sync();}catch(e){toast(e.message)}
- const lg=qs.get('log');if(lg&&KEY()){history.replaceState(null,'',location.pathname);const h=S.habits.find(x=>x.id===lg.toLowerCase()||x.name.toLowerCase()===lg.toLowerCase());
+ const lg=qs.get('log');if(lg){history.replaceState(null,'',location.pathname);const h=S.habits.find(x=>x.id===lg.toLowerCase()||x.name.toLowerCase()===lg.toLowerCase());
   if(!h)toast('No habit "'+lg+'"');else{const n=periodCount(counts(),h,today());if(n>=h.target)toast(h.name+' already done ✓');else await tap(h.id,'add');}}
- else if(qs.get('key'))history.replaceState(null,'',location.pathname);
  render();})();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 </script></body></html>

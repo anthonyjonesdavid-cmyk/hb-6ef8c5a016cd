@@ -1,12 +1,11 @@
 // Habits widget for Scriptable — icon-only rings, like Streaks.
-// Setup: paste into a new Scriptable script, set KEY below, add a Scriptable widget, choose this script.
+// Setup: paste into a new Scriptable script, add a Scriptable widget, choose this script.
 // Widget Parameter (optional, long-press widget > Edit Widget > Parameter), e.g.:
 //   water,run,stretch           -> only these habits, in this order
 //   style=thin;bg=#1c1c1e        -> override CONFIG options
 //   water,run;cols=3;style=bold  -> combine
 // ===================== CONFIG =====================
 const CONFIG = {
-  KEY: "PASTE_YOUR_HABIT_KEY",          // your private habit key
   APP: "https://anthonyjonesdavid-cmyk.github.io/hb-6ef8c5a016cd/",
   SUPA: "https://hlsvzfdvvstojztmworm.supabase.co",
   ANON: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhsc3Z6ZmR2dnN0b2p6dG13b3JtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4MDE3MDQsImV4cCI6MjA5OTM3NzcwNH0.VAJwjJlpCS0-bzP6NCPj4E1rc8yg9PFy3b51n6uvkIY",
@@ -35,7 +34,7 @@ async function load() {
     const r = new Request(CONFIG.SUPA + "/rest/v1/rpc/hb_state");
     r.method = "POST"; r.timeoutInterval = 10;
     r.headers = { apikey: CONFIG.ANON, Authorization: "Bearer " + CONFIG.ANON, "Content-Type": "application/json" };
-    r.body = JSON.stringify({ k: CONFIG.KEY, days: 8 });
+    r.body = JSON.stringify({ days: 8 });
     const j = await r.loadJSON();
     if (!j.habits) throw new Error(j.message || "bad response");
     fm.writeString(cache, JSON.stringify(j)); return j;

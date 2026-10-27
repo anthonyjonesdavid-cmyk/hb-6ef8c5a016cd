@@ -1,3 +1,4 @@
 schema.sql
 .secrets
 shots/
+nokey.sql
